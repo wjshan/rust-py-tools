@@ -1,0 +1,15 @@
+[package]
+name = "rust-py-tools"
+version = "0.1.1"
+edition = "2021"
+authors = ["dandan <454273687@qq.com>"]
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "rust_py_tools"
+crate-type = ["cdylib"]
+
+[features]
+default = []
+
+[dependencies]
+pyo3 = { version = "0.17.1", features = ["extension-module"] }
