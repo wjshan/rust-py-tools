@@ -2,7 +2,7 @@ from typing import List
 
 
 class MetchResult:
-    fitst:str
+    first:str
     second:str
     ratio:float
 
