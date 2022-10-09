@@ -43,6 +43,10 @@ jobs:
           rust-toolchain: stable
 
       - run: ls -lh dist/
+        if: ${{matrix.os != 'windows'}}
+      
+      - run: dir dist/
+        if: ${{matrix.os == 'windows'}}
 
       - uses: actions/upload-artifact@v3
         with:
