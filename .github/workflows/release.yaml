@@ -21,7 +21,7 @@ jobs:
           # Windows on arm64 only supports Python 3.11+
           - os: windows
             target: aarch64
-    runs-on: ${{ matrix.os }}-last
+    runs-on: ${{ matrix.os }}-latest
 
     steps:
       - uses: actions/checkout@v3
