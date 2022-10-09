@@ -3,12 +3,14 @@ requires = ["maturin>=0.13,<0.14"]
 build-backend = "maturin"
 
 [project]
-name = "rust-py-tools"
+name = "rust-py-tools-d"
 requires-python = ">=3.7"
+authors = [
+    {name = 'Dan dan', email = '454273687@qq.com'}
+]
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
     'Operating System :: MacOS',
     'Operating System :: Microsoft :: Windows',
     'Operating System :: POSIX :: Linux',
@@ -19,5 +21,20 @@ classifiers = [
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
 ]
+
+dynamic = [
+    'description',
+    'license',
+    'readme',
+    'version'
+]
+
+dependencies = [
+    'typing_extensions; python_version < "3.11.0"'
+]
+
+[project.urls]
+Homepage = 'https://github.com/wjshan/rust-py-tools'
+Source = 'https://github.com/wjshan/rust-py-tools'
 
 
