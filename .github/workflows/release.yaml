@@ -1,0 +1,84 @@
+name: Release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+permissions: # added using https://github.com/step-security/secure-workflows
+  contents: read
+
+jobs:
+  build:
+    name: Build on  ${{ matrix.os }}-${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, macos, windows]
+        target: [x86_64, aarch64]
+        manylinux: [auto]
+        # python-version: [3.7, 3.8, 3.9, 3.10, 3.11]
+        interpreter: [3.7 3.8 3.9 3.10]
+        exclude:
+          # Windows on arm64 only supports Python 3.11+
+          - os: windows
+            target: aarch64
+    runs-on: ${{ matrix.os }}-last
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: build wheels
+        uses: messense/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux || 'auto' }}
+          container: ${{ matrix.container }}
+          args: --release --out dist --interpreter ${{ matrix.interpreter }}
+          rust-toolchain: stable
+
+      - run: ls -lh dist/
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: pypi_files
+          path: dist
+
+  release:
+    needs: [build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - run: pip install -U twine
+
+      - name: get dist artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: pypi_files
+          path: dist
+      
+      - run: twine check dist/*
+
+      - name: upload to pypi
+        run: twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOOKEN }}
+
+      - name: upload to github release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*.whl
