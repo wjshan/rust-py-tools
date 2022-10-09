@@ -80,9 +80,3 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOOKEN }}
-
-      - name: upload to github release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            dist/*.whl
