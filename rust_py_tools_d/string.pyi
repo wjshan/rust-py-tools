@@ -59,12 +59,13 @@ def string_similarity(word1:str,word2:str)->float:
     0.4
     """
 
+
 def fuzzy_match(first_workds:List[str],second_words:List[str],cutoff:float)->List[MetchResult]:
     """
     批量匹配两个列表的内字符的相似度
     此方法会将将两个数组做一次笛卡尔乘积运算
 
-    时间复杂度: `m=first_workds.length`,`n=second_words.length` $O(m*n*(a+b))$.a,b为列表包含字符串的平均铲毒
+    时间复杂度: `m=first_workds.length`,`n=second_words.length` $O(m*n*(a+b))$.a,b为列表包含字符串的平均长度
     空间复杂度: O(m*n)
     
     Args:
@@ -76,4 +77,24 @@ def fuzzy_match(first_workds:List[str],second_words:List[str],cutoff:float)->Lis
         List[MetchResult]: 满足cutoff的匹配项
 
     >>> fuzzy_match(["柱钢筋绑扎","horse",])
+    """
+
+
+def num_distinct(source:str,target:str)->int:
+    """
+    计算在`source`序列中,子序列`target`出现的次数
+
+    即通过删除(也可以不删除)一些字符,使得序列`source`等于序列`target`
+
+    Args:
+        source (str): 原字符串
+        target (str): 目标字符换
+
+    Returns:
+        int: 出现次数
+
+    >>> num_distinct("rabbbit","rabbit")
+    3
+    >>> num_distinct("babgbag","bag")
+    5
     """

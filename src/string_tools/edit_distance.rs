@@ -1,9 +1,18 @@
 use std::cmp;
 
-use pyo3::{exceptions::PyValueError, prelude::*};
+use pyo3::prelude::*;
+use pyo3::pyfunction;
+use pyo3::exceptions::*;
 
-///  编辑距离
-fn edit_distance(word1: &String, word2: &String) -> usize {
+pub fn edit_distance(word1: &String, word2: &String) -> usize {
+    /*!
+     # 计算字符串之间的编辑距离
+     ## Examples:
+      ```
+      let range = edit_distance(String::from("abcd"), String::from("avdd"))
+      ```
+     assert_eq!(edit_distance(String::from("abcd"), String::from("avdd")),2)
+    */
     let word1_list: Vec<char> = word1.chars().collect();
     let word2_list: Vec<char> = word2.chars().collect();
     let m = word1_list.len();
@@ -36,96 +45,87 @@ fn edit_distance(word1: &String, word2: &String) -> usize {
     dp[m][n]
 }
 
-/// 计算字符串相似度
-fn string_similarity(word1: &String, word2: &String) -> f64 {
-    let range = edit_distance(word1, word2) as f64;
-    let m = word1.chars().count();
-    let n = word2.chars().count();
-    let max_length = cmp::max(n, m) as f64;
-    if max_length == 0.0{
-        return 1.0;
-    }
-    return 1.0 - range / max_length;
-}
 #[pyclass]
-struct MetchResult {
-    #[pyo3(get)]
+pub struct MetchResult {
+    #[pyo3(get, set)]
     first: String,
-    #[pyo3(get)]
+    #[pyo3(get, set)]
     second: String,
-    #[pyo3(get)]
+    #[pyo3(get, set)]
     ratio: f64,
 }
 #[pymethods]
 impl MetchResult {
     #[new]
-    fn new(first:String,second:String,ratio:f64)->Self{
-        MetchResult{
-            first,second,ratio
+    fn new(first: String, second: String, ratio: f64) -> Self {
+        MetchResult {
+            first,
+            second,
+            ratio,
         }
     }
 }
 
-/// 对比两个字符串列表,根据cutoff数值进行筛选
-fn fuzzy_match(
+fn string_similarity(word1: &String, word2: &String) -> f64 {
+    let range = edit_distance(word1, word2) as f64;
+    let m = word1.chars().count();
+    let n = word2.chars().count();
+    let max_length = cmp::max(n, m) as f64;
+    if max_length == 0.0 {
+        return 1.0;
+    }
+    return 1.0 - range / max_length;
+}
+
+pub fn fuzzy_match(
     first_workds: Vec<String>,
     second_words: Vec<String>,
     cutoff: f64,
 ) -> Vec<MetchResult> {
     let mut result: Vec<MetchResult> = Vec::new();
     for first in &first_workds {
-        for seconds in &second_words {
-            let ratio = string_similarity(&first, &seconds);
+        for second in &second_words {
+            let ratio = string_similarity(&first, &second);
             if ratio < cutoff {
                 continue;
             }
-            result.push(MetchResult {
-                first: first.to_string(),
-                second: seconds.to_string(),
-                ratio: ratio,
-            })
+            result.push(MetchResult::new(
+                first.to_string(),
+                second.to_string(),
+                ratio,
+            ));
         }
     }
     result
 }
 
-#[pymodule]
-pub fn string(_py: Python, m: &PyModule) -> PyResult<()> {
-    /// 编辑距离
-    #[pyfn(m)]
-    #[pyo3[name="edit_distance"]]
-    fn edit_distance_py(_py: Python, word1: String, word2: String) -> PyResult<usize> {
-        Ok(edit_distance(&word1, &word2))
+#[pyfunction[name="edit_distance"]]
+pub fn edit_distance_py(word1: String, word2: String) -> PyResult<usize> {
+    Ok(edit_distance(&word1, &word2))
+}
+
+#[pyfunction[name="string_similarity"]]
+pub fn string_similarity_py(word1: String, word2: String) -> PyResult<f64> {
+    Ok(string_similarity(&word1, &word2))
+}
+
+#[pyfunction[name="fuzzy_match"]]
+pub fn fuzzy_match_py(first_workds: Vec<String>, second_words: Vec<String>, cutoff: f64)->PyResult<Vec<MetchResult>> {
+    if cutoff < 0.0 || cutoff > 1.0 {
+        let error_message = format!("0<=cusoff<=1, current is {}", cutoff);
+        Err(PyValueError::new_err(error_message))
+    } else {
+        Ok(fuzzy_match(first_workds, second_words, cutoff))
     }
+}
 
-    /// 计算字符串相似度
-    #[pyfn(m)]
-    #[pyo3[name="string_similarity"]]
-    fn string_similarity_py(_py: Python, word1: String, word2: String) -> PyResult<f64> {
-        Ok(string_similarity(&word1, &word2))
-    }
-
-    m.add_class::<MetchResult>()?;
-
-    /// 批量模糊匹配
-    #[pyfn(m)]
-    #[pyo3[name="fuzzy_match"]]
-    fn fuzzy_match_py(
-        _py: Python,
-        first_workds: Vec<String>,
-        second_words: Vec<String>,
-        cutoff: f64,
-    ) -> PyResult<Vec<MetchResult>> {
-        if cutoff < 0.0 || cutoff > 1.0 {
-            let error_message = format!("0<=cusoff<=1, current is {}", cutoff);
-            Err(PyValueError::new_err(error_message))
-        } else {
-            Ok(fuzzy_match(first_workds, second_words, cutoff))
-        }
-    }
-
+pub fn register(module: &PyModule) -> PyResult<()> {
+    module.add_function(wrap_pyfunction!(edit_distance_py, module)?)?;
+    module.add_function(wrap_pyfunction!(string_similarity_py, module)?)?;
+    module.add_function(wrap_pyfunction!(fuzzy_match_py, module)?)?;
     Ok(())
 }
+
 
 #[cfg(test)]
 mod edit_distance_tests {

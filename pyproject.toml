@@ -38,3 +38,5 @@ Homepage = 'https://github.com/wjshan/rust-py-tools'
 Source = 'https://github.com/wjshan/rust-py-tools'
 
 
+[tools.maturin]
+cargo-extra-args = "--features python"
